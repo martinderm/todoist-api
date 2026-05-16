@@ -78,6 +78,14 @@ Wenn du Todoist noch nicht gut genug kennst oder wenn sich das Thema nach aktuel
    - Lokales Routing-, Dedupe- und Review-Wissen liegt unter `memory/references/todos/`.
    - Für Zweck, Struktur und Regeln dort zuerst `memory/references/todos/README.md` lesen.
    - Wenn ein Task direkt aus einer E-Mail abgeleitet wird, die `message_id` in der Task-Beschreibung oder Note mitführen, damit der Quellenbezug in Todoist selbst sichtbar bleibt.
+   - Mail-Inhalte nicht in Todoist kopieren oder eng paraphrasieren, wenn dafür kein operativer Mehrwert besteht.
+   - Standard für mailbasierte Tasks: knappe operative Zusammenfassung in eigenen Worten plus minimale Trace-Metadaten.
+   - Minimale Trace-Metadaten sind in der Regel:
+     - `from`
+     - `subject`
+     - `message_id`
+   - Keine langen Mailzitate, keine Thread-Verläufe, keine unnötigen Empfängerlisten und keine umfangreichen Maildetails in externe Todoist-Beschreibungen schreiben.
+   - Wenn unsicher ist, ob die geplante Beschreibung zu nah am Mailinhalt ist: Beschreibung weiter kürzen und nur die konkrete Arbeitsaktion mit den drei Trace-Feldern stehen lassen.
 
 ## Empfehlung: Skill vor Tool
 
@@ -128,6 +136,13 @@ Vorgehen:
 - `POST /tasks` bevorzugen, wenn `project_id`, `section_id`, `description` oder andere Felder gezielt gesetzt werden sollen
 - für Mail-basierte Tasks die `message_id` verpflichtend in der Beschreibung oder Note mitführen
 - in die Beschreibung zusätzlich knapp Quelle, Betreff und relevanten Arbeitskontext schreiben
+- bei Mailquellen nur eine kurze arbeitsbezogene Zusammenfassung in eigenen Worten verwenden
+- bevorzugtes Muster für Mail-Tasks:
+  - 1 Satz: Was ist zu tun?
+  - `from: ...`
+  - `subject: ...`
+  - `message_id: ...`
+- Mailtext nicht absatzweise übernehmen und keine ausführlichen Inhaltswiedergaben schreiben, wenn derselbe Zweck mit einer knappen Arbeitsreferenz erreicht wird
 - nach Anlage Task erneut lesen oder per Listenaufruf des Zielkontexts verifizieren
 
 ### 3) Projects lesen

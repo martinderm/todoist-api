@@ -39,6 +39,12 @@ Wichtig:
 - Keine Vollspiegelung aller Todoist-Tasks unter `memory/references/todos/`.
 - Kein konkurrierendes lokales Task-System aufbauen.
 - Lokal nur das pflegen, was Todoist nicht ohnehin besser als operative Quelle hält.
+- Bei mailbasierten Todoist-Tasks Beschreibungen standardmäßig minimieren:
+  - kurze operative Zusammenfassung in eigenen Worten
+  - `from`
+  - `subject`
+  - `message_id`
+- Keine längeren Mailinhalte oder Thread-Verläufe in Todoist übernehmen, wenn eine knappe Arbeitsreferenz genügt.
 
 ## Voraussetzungen
 
