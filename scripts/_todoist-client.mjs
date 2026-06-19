@@ -12,10 +12,10 @@ const LEGACY_WORKSPACE_ROOT = path.resolve(__dirname, '..', '..', '..');
 
 function candidateSecretsPaths() {
   return [
-    path.join(os.homedir(), '.openclaw', 'secrets.json'),
-    path.join(REPO_ROOT, 'secrets.json'),
     path.join(process.cwd(), 'secrets.json'),
-    path.join(LEGACY_WORKSPACE_ROOT, 'secrets.json')
+    path.join(LEGACY_WORKSPACE_ROOT, 'secrets.json'),
+    path.join(REPO_ROOT, 'secrets.json'),
+    path.join(os.homedir(), '.openclaw', 'secrets.json')
   ];
 }
 
