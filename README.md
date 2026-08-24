@@ -8,43 +8,35 @@ Kompakter Skill für Todoist-Workflows rund um Tasks, Projects, Quick Add, Sync 
 - [scripts/](scripts/): wiederverwendbare Node-Skripte für Todoist API
 - [references/](references/): kuratierte Fachreferenzen zur Todoist-Doku
 
-## Lokale Todo-Wissensschicht
+## Lokale Todo-Wissensschicht (Dual-Evidence-Standard)
 
-Für diesen Skill ist Todoist das operative System of Record. Optional kann es eine schlanke lokale Wissensschicht unter `memory/references/todos/` geben, die nicht als zweites Todo-System gedacht ist, sondern als Agentenhilfe für:
+Für diesen Skill ist Todoist das operative System of Record. Die lokale Wissensschicht trennt normatives Routing-Wissen (Säule 1) von flüchtigen Dedupe-/Review-States (Säule 2):
 
-- Nutzungsregeln
-- Routing zu Projects und Sections
-- Dedupe bei automatisch erkannten Todos
-- Review-Fälle bei unklarer Zuordnung
+### Säule 1 (Normativ — `memory/references/todos/`):
+- `README.md` — Zweck & Struktur der Todo-Konfiguration
+- `todoist-usage.md` — Leitlinien für Prioritäten, Sections & Fälligkeiten
+- `routing-rules.md` — Semantische Zuordnungsregeln zu Projekten
+- `projects.json` — Lokaler Cache bekannter Projekt- und Section-IDs
 
-Typische Dateien:
-
-- `memory/references/todos/README.md`
-- `memory/references/todos/todoist-usage.md`
-- `memory/references/todos/routing-rules.md`
-- `memory/references/todos/projects.json`
-- `memory/references/todos/created-tasks.json`
-- `memory/references/todos/review-queue.json`
+### Säule 2 (Empirisch — `memory/evidence/todos/` oder `data/todos/`):
+- `created-tasks.json` — Minimaler Trace- und Dedupe-Index bereits angelegter Tasks
+- `review-queue.json` — Vorgemerkte unklare Triage-Fälle zur menschlichen Prüfung
 
 Empfohlenes Betriebsmodell:
 
-1. Ein Agent erkennt aus Mail, Meeting oder Projektkontext ein mögliches Todo.
+1. Ein Agent erkennt aus Mail (`mail-desk`), Meeting (`fireflies-api`/`zoom-api`) oder Event (`event-documentation`) ein mögliches Todo.
 2. Der Skill nutzt die Regeln aus `memory/references/todos/`, um zu entscheiden, ob überhaupt ein echter Task angelegt werden soll.
-3. Wenn Zielprojekt, Formulierung und Dringlichkeit klar sind, wird der Task in Todoist angelegt.
+3. Wenn Zielprojekt, Formulierung und Dringlichkeit klar sind, wird der Task in Todoist mit **Factored Attribution** angelegt (Herkunftsnachweis im Feld `description`).
 4. Lokal wird nur minimale Trace-Information für Dedupe oder spätere Nachvollziehbarkeit gespeichert.
 5. Unklare Fälle werden lokal als Review-Fälle vorgemerkt statt blind angelegt.
 
 Wichtig:
 
-- Keine Vollspiegelung aller Todoist-Tasks unter `memory/references/todos/`.
+- Keine Vollspiegelung aller Todoist-Tasks lokal.
 - Kein konkurrierendes lokales Task-System aufbauen.
-- Lokal nur das pflegen, was Todoist nicht ohnehin besser als operative Quelle hält.
-- Bei mailbasierten Todoist-Tasks Beschreibungen standardmäßig minimieren:
-  - kurze operative Zusammenfassung in eigenen Worten
-  - `from`
-  - `subject`
-  - `message_id`
-- Keine längeren Mailinhalte oder Thread-Verläufe in Todoist übernehmen, wenn eine knappe Arbeitsreferenz genügt.
+- Bei allen abgeleiteten Todoist-Tasks Beschreibungen standardmäßig minimieren:
+  - kurze operative Handlungsanweisung in eigenen Worten
+  - Herkunftsnachweis (`message_id`, `meeting_id`, `event_slug` oder Beleganker `[EVID-...]`)
 
 ## Voraussetzungen
 

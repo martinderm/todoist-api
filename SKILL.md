@@ -73,19 +73,16 @@ Wenn du Todoist noch nicht gut genug kennst oder wenn sich das Thema nach aktuel
    - Wenn Hilfsskripte nötig sind, lege sie unter `scripts/` des Skills an und bevorzuge wiederverwendbare, klar benannte Skripte statt einmaliger Ad-hoc-Dateien.
    - Gemeinsame HTTP-, Auth- und Fehlerlogik bevorzugt in Shared-Module auslagern statt sie in mehrere Skripte zu kopieren.
 
-6. Trenne operative Tasks von lokaler Wissensschicht.
+6. Trenne operative Tasks von lokaler Wissensschicht (Dual-Evidence-Standard).
    - Todoist ist Source of Truth für echte Aufgaben.
-   - Lokales Routing-, Dedupe- und Review-Wissen liegt unter `memory/references/todos/`.
-   - Für Zweck, Struktur und Regeln dort zuerst `memory/references/todos/README.md` lesen.
-   - Wenn ein Task direkt aus einer E-Mail abgeleitet wird, die `message_id` in der Task-Beschreibung oder Note mitführen, damit der Quellenbezug in Todoist selbst sichtbar bleibt.
-   - Mail-Inhalte nicht in Todoist kopieren oder eng paraphrasieren, wenn dafür kein operativer Mehrwert besteht.
-   - Standard für mailbasierte Tasks: knappe operative Zusammenfassung in eigenen Worten plus minimale Trace-Metadaten.
-   - Minimale Trace-Metadaten sind in der Regel:
-     - `from`
-     - `subject`
-     - `message_id`
-   - Keine langen Mailzitate, keine Thread-Verläufe, keine unnötigen Empfängerlisten und keine umfangreichen Maildetails in externe Todoist-Beschreibungen schreiben.
-   - Wenn unsicher ist, ob die geplante Beschreibung zu nah am Mailinhalt ist: Beschreibung weiter kürzen und nur die konkrete Arbeitsaktion mit den drei Trace-Feldern stehen lassen.
+   - **Säule 1 (`memory/references/todos/`):** Normative Konfiguration, Routing-Regeln (`routing-rules.md`, `todoist-usage.md`, `projects.json`).
+   - **Säule 2 (`memory/evidence/todos/` oder `data/todos/`):** Operative Sync-Logs, Triage-Zustände (`created-tasks.json`, `review-queue.json`).
+   - **Factored Attribution (Herkunftsnachweis im Task):**
+     - Wenn ein Task aus einer E-Mail (`mail-desk`), einem Meeting (`fireflies-api`/`zoom-api`) oder einem Event (`event-documentation`) abgeleitet wird, **muss** die Herkunft im Feld `description` mitgeführt werden.
+     - *Mail-Tasks:* `message_id`, `from`, `subject` (und optional Beleganker `[EVID-...]`).
+     - *Meeting-Tasks:* `meeting_id`, `title` (und optional Beleganker `[EVID-...]`).
+     - *Event-Tasks:* `event_slug`, `session/keynote`, `[EVID-...]`.
+   - Mail-/Meeting-Inhalte nicht in Todoist kopieren oder eng paraphrasieren. Standard ist eine knappe operative Zusammenfassung in eigenen Worten plus die minimalen Trace-Metadaten.
 
 ## Empfehlung: Skill vor Tool
 
