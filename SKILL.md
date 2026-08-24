@@ -3,9 +3,12 @@ name: todoist-api
 description: Arbeite mit der Todoist API für Tasks, Projects, Sections, Labels, Quick Add, Sync und Webhooks. Verwende diesen Skill, wenn Todoist gelesen, integriert, automatisiert oder über API angebunden werden soll, besonders für Fragen zu Auth, Pagination, inkrementellem Sync, Natural-Language-Task-Erfassung, Project-Struktur und Webhooks.
 ---
 
-# Todoist API
+# Todoist API (SaaS-Adapter)
 
-Nutze diesen Skill für Todoist-Arbeit. Bevor du konkrete API-Operationen planst oder implementierst, hole dir den aktuellen Stand aus der offiziellen Doku.
+> **Architektur-Rolle:** Technischer SaaS-Adapter für Todoist (REST API, Quick Add, Projects, Sections, Sync, Webhooks).  
+> **Workflow-Orchestrierung:** Die übergeordnete Aufgaben-Triage, Deduplizierung, Routing-Regeln und Factored Attribution im Workspace wird durch **[`office-intelligence/task-desk`](file:///D:/users/dagobert/agents/skills/office-intelligence/skills/task-desk/SKILL.md)** gesteuert.
+
+Nutze diesen Skill für direkte Todoist-API-Operationen. Bevor du konkrete API-Operationen planst oder implementierst, hole dir den aktuellen Stand aus der offiziellen Doku.
 
 ## Offizielle Doku
 
