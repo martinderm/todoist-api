@@ -49,9 +49,10 @@ Wenn du Todoist noch nicht gut genug kennst oder wenn sich das Thema nach aktuel
 2. Prüfe die Auth-Annahme.
    - Todoist arbeitet laut Doku mit Bearer Token.
    - Keine Secrets raten oder erfinden.
-   - Lokale Secret-Konvention: `~/.openclaw/secrets.json` unter `integrations.todoist.accounts.<email>.apiToken`.
+   - Lokale Secret-Konvention: bevorzugt `.agents/secrets.json` im Workspace-Root, alternativ `secrets.json` im Workspace-Root oder `~/.openclaw/secrets.json`, jeweils unter `integrations.todoist.accounts.<email>.apiToken`.
   - `secrets.json` darf niemals versioniert oder in PRs enthalten sein.
    - Akzeptierte Fallback-Felder für bestehende lokale Setups: `token` oder `accessToken`.
+   - Die Kandidatenkette wählt das erste Dokument mit Todoist-Credentials; eine lokale secrets.json anderer Tools blockiert den Fallback nicht.
    - Beim Zugriff auf Accounts mit Sonderzeichen in der Mailadresse immer String-Key-Notation verwenden, nicht Dot-Notation.
    - Account-Zugriff erfolgt über `integrations.todoist.accounts["<email>"]`.
    - Wenn Credentials fehlen, nur Vorbereitung, Schema, Beispiele und Integrationsplan liefern.

@@ -11,7 +11,8 @@ Stand: 2026-05-06
 
 ## Lokale Secret-Konvention
 
-- Lokaler Speicherort: `~/.openclaw/secrets.json`
+- Kandidatenkette (Reihenfolge, Stand 2026-09-30): `.agents/secrets.json` und `secrets.json` pro erkanntem Workspace-Root, dann `secrets.json` im Skill-Root, dann `~/.openclaw/secrets.json`.
+- Gewählt wird das erste Dokument, das Todoist-Credentials enthält (`integrations.todoist.accounts` mit mindestens einem Eintrag); fremde lokale secrets-Dateien blockieren den Fallback nicht.
 - Für einen eingerichteten Account:
   - `integrations.todoist.accounts["<email>"].apiToken`
 - Akzeptierte Fallback-Felder:

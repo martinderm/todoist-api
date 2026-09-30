@@ -42,9 +42,12 @@ Wichtig:
 ## Voraussetzungen
 
 - Node.js (empfohlen: aktuelles LTS oder neuer)
-- Secrets in einer der folgenden Dateien:
+- Secrets in einer der folgenden Dateien (in dieser Reihenfolge geprüft, pro erkanntem Workspace-Root zuerst):
+  - `<workspace>/.agents/secrets.json`
+  - `<workspace>/secrets.json`
+  - `secrets.json` im Skill-Root (Fallback)
   - `~/.openclaw/secrets.json`
-  - `secrets.json` im Workspace-Root (Fallback)
+- Die Kandidatenkette liest Dateien so lange, bis eine Todoist-Credentials (`integrations.todoist.accounts`) enthält; eine lokale `secrets.json` anderer Tools blockiert den Fallback nicht.
 - Sicherheitsregel: `secrets.json` niemals committen oder in Pull Requests aufnehmen.
 
 Erwartete Struktur:

@@ -2,34 +2,33 @@
 type: object
 cluster: quality
 universe: live
-status: stub
+status: verified
 entity: tests/
 verified_at: 2026-09-30
-revision: 974c6a71dd12d6943b46380f869397
+revision: 4cbfc9f
 ---
 
 # Qualität
 
-Tests fehlen in dieser Revision vollständig (`status: stub`); dieses Repository hat keine `tests/`-Struktur, kein Testskript und keine Test-Dependencies. Verifikation ist bis zum Aufbau von `tests/` nur manuell (CLI-Smoke-Aufrufe) oder über aufrufende Workspaces möglich.
+Regressionen laufen über `node --test` mit importierbaren Hilfsfunktionen; kein Build-Schritt, keine externen Test-Dependencies.
 
-## Why this shape (target)
-fireflies-api-Muster ist Referenz: `node --test` mit `node:test` + `assert/strict`, null Dependencies, netzfreie Tests über Injektion (Secrets-Pfade, fetch-Impl) statt Homedir-/Netz-Manipulation.
+## Why this shape
+Der Skill ist reines Node (ESM); der eingebaute Test-Runner hält die Toolchain bei null Dependencies.
 
-## Shape (target)
-Geplanter Aufbau im Zuge der GitHub-Issues: `tests/` mit `node --test "tests/**/*.mjs"` (Node v24: Positional-Args sind Globs), Regressionen für Secret-Resolvierung (T1) und CLI-Verhalten (T2). Details nach Implementierung hier synchronisieren.
+## Shape
+`tests/` enthält Smoke-/Regressionstests (node:test + assert/strict, keine Dependencies), ausgeführt mit `node --test "tests/**/*.mjs"` (Node v24: Positional-Args sind Globs, ein Verzeichnis-Argument wird nicht discovered). Netzfreie Tests nutzen temporäre Verzeichnisse (`mkdtempSync`) und injizierte Kandidatenpfade statt Homedir-Manipulation; Secrets-Regressionen pinnen Fallback-Scan, Priorität und Fehlersemantik (`missing_secrets_file`, invalid-JSON-Throw, lazy scan). Kein Linter/Prettier konfiguriert.
 
-- [SKILL.md](../../../SKILL.md) — Sicherheits- und Qualitätsregeln
-- [scripts/_todoist-client.mjs](../../../scripts/_todoist-client.mjs) — Testseam-Kandidaten (`loadSecretsJson`-Export, fetch-Injektion)
+- [tests/registry-smoke.mjs](../../../tests/registry-smoke.mjs) — `tests/registry-smoke.mjs:57`
 
 ## Connected to
-[Client](client.md), [CLI](cli.md).
+[Client](client.md), [CLI](cli.md), [Todoist-Schema](todoist-schema.md), [Sync](sync.md).
 
 ## If you change this
-- **Hits:** Verifikationskommandos in Runs, README-Hinweise.
-- **Does not hit:** Externe Todoist-API; kuratierte Referenzen.
+- **Hits:** Verifikationskommandos in Runs, README-Test-Hinweise.
+- **Does not hit:** Kuratierte Referenzen; Todoist-Endpunkte selbst.
 
 ## Surfaces
-Geplant: lokales `node --test` ohne API-Token; bis dahin keine automatisierte Verifikation.
+`node --test "tests/**/*.mjs"` ist der lokale Verifikationsbefehl ohne API-Token.
 
 ## See
-Analog-Muster: `../fireflies-api/docs/system-map/objects/quality.md` (Workspace-Sibling). [Änderungsrouting](../effects/CONTEXT.md).
+Verifikationsreihenfolge im Run: [Änderungsrouting](../effects/CONTEXT.md).
