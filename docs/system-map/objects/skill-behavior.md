@@ -5,7 +5,7 @@ universe: live
 status: verified
 entity: SKILL.md
 verified_at: 2026-09-30
-revision: 974c6a71dd12d6943b46380f865cb8534f869397
+revision: 974c6a71dd12d6943b46380f815cb8534f869397
 ---
 
 # Skill-Verhalten
