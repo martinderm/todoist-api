@@ -7,6 +7,7 @@ Kompakter Skill für Todoist-Workflows rund um Tasks, Projects, Quick Add, Sync 
 - [SKILL.md](SKILL.md): Arbeitsregeln und Einsatzbereich des Skills
 - [scripts/](scripts/): wiederverwendbare Node-Skripte für Todoist API
 - [references/](references/): kuratierte Fachreferenzen zur Todoist-Doku
+- [docs/system-map/README.md](docs/system-map/README.md): ICM System-Map (Repository-Katalog für Änderungen)
 
 ## Lokale Todo-Wissensschicht (Dual-Evidence-Standard)
 
