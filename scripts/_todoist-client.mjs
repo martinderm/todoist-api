@@ -163,6 +163,30 @@ export function loadApiToken(account) {
   return apiToken;
 }
 
+function resolveToken({ secrets, account } = {}) {
+  if (secrets) {
+    const resolvedAccount = resolveAccount(secrets, account);
+    if (!resolvedAccount) {
+      throw new Error('missing_account_ref');
+    }
+
+    const accountConfig = secrets?.integrations?.todoist?.accounts?.[resolvedAccount];
+    const apiToken =
+      accountConfig?.apiToken ??
+      accountConfig?.token ??
+      accountConfig?.accessToken ??
+      null;
+
+    if (!apiToken) {
+      throw new Error(`missing_api_token:${resolvedAccount}`);
+    }
+
+    return apiToken;
+  }
+
+  return loadApiToken(account);
+}
+
 function buildUrl(resourcePath, query) {
   const url = new URL(`${API_BASE}${resourcePath}`);
 
@@ -202,10 +226,12 @@ export async function todoistRequest({
   query,
   body,
   account,
-  headers = {}
+  headers = {},
+  fetchImpl = fetch,
+  secrets
 } = {}) {
-  const token = loadApiToken(account);
-  const response = await fetch(buildUrl(resourcePath, query), {
+  const token = resolveToken({ secrets, account });
+  const response = await fetchImpl(buildUrl(resourcePath, query), {
     method,
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -227,14 +253,16 @@ export async function todoistRequest({
 export async function todoistSync({
   syncToken = '*',
   resourceTypes = ['projects', 'items', 'sections', 'labels'],
-  account
+  account,
+  fetchImpl = fetch,
+  secrets
 } = {}) {
-  const token = loadApiToken(account);
+  const token = resolveToken({ secrets, account });
   const form = new URLSearchParams();
   form.set('sync_token', syncToken);
   form.set('resource_types', JSON.stringify(resourceTypes));
 
-  const response = await fetch(`${API_BASE}/sync`, {
+  const response = await fetchImpl(`${API_BASE}/sync`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
