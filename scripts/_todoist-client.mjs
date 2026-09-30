@@ -8,31 +8,124 @@ const API_BASE = 'https://api.todoist.com/api/v1';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '..');
-const LEGACY_WORKSPACE_ROOT = path.resolve(__dirname, '..', '..', '..');
+const rawRoot = path.resolve(__dirname, '..', '..', '..');
+const deepScriptRoot = path.basename(rawRoot) === '.agents' ? path.dirname(rawRoot) : rawRoot;
+const directScriptRoot = path.resolve(__dirname, '..', '..');
+const scriptRoot = directScriptRoot;
 
-function candidateSecretsPaths() {
-  return [
-    path.join(process.cwd(), 'secrets.json'),
-    path.join(LEGACY_WORKSPACE_ROOT, 'secrets.json'),
-    path.join(REPO_ROOT, 'secrets.json'),
-    path.join(os.homedir(), '.openclaw', 'secrets.json')
-  ];
+function uniquePaths(paths) {
+  return [...new Set(paths.filter(Boolean).map((entry) => path.resolve(entry)))];
 }
 
-function loadSecretsJson() {
-  const tried = [];
+function collectAncestors(startPath) {
+  if (!startPath) {
+    return [];
+  }
 
-  for (const secretsPath of candidateSecretsPaths()) {
+  const resolved = path.resolve(startPath);
+  const ancestors = [];
+  let current = resolved;
+
+  while (true) {
+    ancestors.push(current);
+    const parent = path.dirname(current);
+    if (parent === current) {
+      break;
+    }
+    current = parent;
+  }
+
+  return ancestors;
+}
+
+function looksLikeWorkspaceRoot(dirPath) {
+  return [
+    path.join(dirPath, 'settings.json'),
+    path.join(dirPath, 'AGENTS.md'),
+    path.join(dirPath, '.agents'),
+    path.join(dirPath, 'secrets.json')
+  ].some((candidate) => fs.existsSync(candidate));
+}
+
+function candidateWorkspaceRoots() {
+  const envRoot = process.env.WORKSPACE_ROOT;
+  const logicalPwd = process.env.PWD;
+  const cwdAncestors = collectAncestors(process.cwd());
+  const logicalPwdAncestors = collectAncestors(logicalPwd);
+  const argvScriptRoot = process.argv[1]
+    ? path.resolve(path.dirname(path.resolve(process.argv[1])), '..', '..', '..')
+    : null;
+  const derivedRoots = [
+    envRoot,
+    logicalPwd,
+    process.cwd(),
+    argvScriptRoot,
+    directScriptRoot,
+    deepScriptRoot
+  ];
+
+  const discovered = [];
+  for (const candidate of uniquePaths([...derivedRoots, ...cwdAncestors, ...logicalPwdAncestors])) {
+    if (looksLikeWorkspaceRoot(candidate)) {
+      discovered.push(candidate);
+    }
+  }
+
+  return uniquePaths(discovered);
+}
+
+export function resolveWorkspaceRoot() {
+  const roots = candidateWorkspaceRoots();
+  return roots[0] || scriptRoot;
+}
+
+function candidateSecretsPaths() {
+  const workspaceCandidates = candidateWorkspaceRoots().flatMap((root) => [
+    path.join(root, '.agents', 'secrets.json'),
+    path.join(root, 'secrets.json')
+  ]);
+
+  return uniquePaths([
+    ...workspaceCandidates,
+    path.join(REPO_ROOT, 'secrets.json'),
+    path.join(os.homedir(), '.openclaw', 'secrets.json')
+  ]);
+}
+
+function hasTodoistCredentials(document) {
+  const accounts = document?.integrations?.todoist?.accounts;
+  return Boolean(accounts) && typeof accounts === 'object' && Object.keys(accounts).length > 0;
+}
+
+export function loadSecretsJson(candidatePaths = candidateSecretsPaths()) {
+  const tried = [];
+  let fallback;
+  let hasFallback = false;
+
+  for (const secretsPath of candidatePaths) {
     tried.push(secretsPath);
     if (!fs.existsSync(secretsPath)) {
       continue;
     }
 
     const raw = fs.readFileSync(secretsPath, 'utf8');
-    return JSON.parse(raw);
+    const document = JSON.parse(raw);
+
+    if (!hasFallback) {
+      fallback = document;
+      hasFallback = true;
+    }
+
+    if (hasTodoistCredentials(document)) {
+      return document;
+    }
   }
 
-  throw new Error(`missing_secrets_file:${tried.join('|')}`);
+  if (!hasFallback) {
+    throw new Error(`missing_secrets_file:${tried.join('|')}`);
+  }
+
+  return fallback;
 }
 
 function resolveAccount(secrets, requestedAccount) {
