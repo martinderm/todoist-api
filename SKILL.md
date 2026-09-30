@@ -6,7 +6,7 @@ description: Arbeite mit der Todoist API für Tasks, Projects, Sections, Labels,
 # Todoist API (SaaS-Adapter)
 
 > **Architektur-Rolle:** Technischer SaaS-Adapter für Todoist (REST API, Quick Add, Projects, Sections, Sync, Webhooks).  
-> **Workflow-Orchestrierung:** Die übergeordnete Aufgaben-Triage, Deduplizierung, Routing-Regeln und Factored Attribution im Workspace wird durch **[`office-intelligence/task-desk`](file:///D:/users/dagobert/agents/skills/office-intelligence/skills/task-desk/SKILL.md)** gesteuert.
+> **Workflow-Orchestrierung:** Die übergeordnete Aufgaben-Triage, Deduplizierung, Routing-Regeln und Factored Attribution im Workspace wird durch **[`office-intelligence/task-desk`](../office-intelligence/skills/task-desk/SKILL.md)** gesteuert.
 
 Nutze diesen Skill für direkte Todoist-API-Operationen. Bevor du konkrete API-Operationen planst oder implementierst, hole dir den aktuellen Stand aus der offiziellen Doku.
 

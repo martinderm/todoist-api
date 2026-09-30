@@ -90,18 +90,22 @@ function makeWorkspace() {
 
 function runCli(scriptPath, args, { workspaceRoot, capture, failAll, input } = {}) {
   const dir = makeTempDir('todoist-loader-');
-  const loader = writeLoader(dir);
-  const env = { ...process.env };
-  if (workspaceRoot) env.WORKSPACE_ROOT = workspaceRoot;
-  if (capture) env.TODOIST_TEST_CAPTURE = capture;
-  if (failAll) env.TODOIST_TEST_FAIL_ALL = '1';
+  try {
+    const loader = writeLoader(dir);
+    const env = { ...process.env };
+    if (workspaceRoot) env.WORKSPACE_ROOT = workspaceRoot;
+    if (capture) env.TODOIST_TEST_CAPTURE = capture;
+    if (failAll) env.TODOIST_TEST_FAIL_ALL = '1';
 
-  return spawnSync(process.execPath, ['--import', pathToFileURL(loader).href, scriptPath, ...args], {
-    encoding: 'utf8',
-    env,
-    cwd: REPO_ROOT,
-    input
-  });
+    return spawnSync(process.execPath, ['--import', pathToFileURL(loader).href, scriptPath, ...args], {
+      encoding: 'utf8',
+      env,
+      cwd: REPO_ROOT,
+      input
+    });
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 function parseEnvelope(stdout) {
@@ -269,6 +273,17 @@ test('findOrCreateSection follows next_cursor pagination', async () => {
   assert.equal(second.searchParams.get('limit'), '200');
 });
 
+test('findOrCreateSection aborts after the pagination safety limit', async () => {
+  const pages = Array.from({ length: 20 }, (_, index) => makeResponse({ results: [], next_cursor: `C${index + 1}` }));
+  const fetchImpl = makeFetch(pages);
+
+  await assert.rejects(
+    () => findOrCreateSection({ name: 'Missing', project_id: 'P1', fetchImpl, secrets: TODOIST_DOC }),
+    /section_pagination_limit_exceeded/
+  );
+  assert.equal(fetchImpl.calls.length, 20);
+});
+
 test('createSection without find-or-create posts directly without a prior GET', async () => {
   const fetchImpl = makeFetch([makeResponse({ id: 'S3', name: 'Direct' })]);
 
@@ -333,6 +348,15 @@ test('cli with a missing --file exits 2 with batch_file_not_found', () => {
 
   assert.equal(result.status, 2);
   assert.match(result.stderr, /batch_file_not_found/);
+});
+
+test('cli with a directory as --file exits 2 with batch_file_unreadable', () => {
+  const dir = makeTempDir();
+
+  const result = spawnSync(process.execPath, [CREATE_TASKS, '--file', dir], { encoding: 'utf8', cwd: REPO_ROOT });
+
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /batch_file_unreadable/);
 });
 
 test('cli batch success exits 0 and reports the created count', () => {

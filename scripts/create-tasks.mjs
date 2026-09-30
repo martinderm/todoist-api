@@ -131,7 +131,14 @@ function readBatchSource(options) {
       throw new Error('batch_file_not_found');
     }
 
-    return fs.readFileSync(options.file, 'utf8');
+    try {
+      return fs.readFileSync(options.file, 'utf8');
+    } catch (error) {
+      if (error?.code === 'EISDIR') {
+        throw new Error('batch_file_unreadable');
+      }
+      throw error;
+    }
   }
 
   return fs.readFileSync(0, 'utf8');

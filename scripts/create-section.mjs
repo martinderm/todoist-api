@@ -33,10 +33,18 @@ function parseArgs(argv) {
   return args;
 }
 
+const SECTION_PAGINATION_PAGE_LIMIT = 20;
+
 async function findSectionByName({ name, project_id, fetchImpl, secrets }) {
   let cursor;
+  let pages = 0;
 
   while (true) {
+    pages += 1;
+    if (pages > SECTION_PAGINATION_PAGE_LIMIT) {
+      throw new Error('section_pagination_limit_exceeded');
+    }
+
     const query = { project_id, limit: 200 };
     if (cursor) {
       query.cursor = cursor;

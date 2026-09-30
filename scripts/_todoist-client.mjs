@@ -8,10 +8,9 @@ const API_BASE = 'https://api.todoist.com/api/v1';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '..');
-const rawRoot = path.resolve(__dirname, '..', '..', '..');
-const deepScriptRoot = path.basename(rawRoot) === '.agents' ? path.dirname(rawRoot) : rawRoot;
-const directScriptRoot = path.resolve(__dirname, '..', '..');
-const scriptRoot = directScriptRoot;
+const rawScriptRoot = path.resolve(__dirname, '..', '..', '..');
+const deepScriptRoot = path.basename(rawScriptRoot) === '.agents' ? path.dirname(rawScriptRoot) : rawScriptRoot;
+const scriptRoot = path.resolve(__dirname, '..', '..');
 
 function uniquePaths(paths) {
   return [...new Set(paths.filter(Boolean).map((entry) => path.resolve(entry)))];
@@ -60,7 +59,7 @@ function candidateWorkspaceRoots() {
     logicalPwd,
     process.cwd(),
     argvScriptRoot,
-    directScriptRoot,
+    scriptRoot,
     deepScriptRoot
   ];
 
