@@ -178,13 +178,15 @@ Aktuelle Skripte:
 - `list-projects.mjs`
   - listet Projects mit optionalen Filtern und Cursor-Pagination
 - `list-tasks.mjs`
-  - listet Tasks mit typischen Filtern
+  - listet Tasks mit typischen Filtern (`--project-id`, `--section-id`, `--label`, `--filter`)
 - `get-task.mjs`
   - lädt ein einzelnes Task-Objekt
 - `create-section.mjs`
-  - legt eine Section in einem bestehenden Projekt an
+  - legt eine Section in einem bestehenden Projekt an; mit `--find-or-create` wird zuerst `GET /sections?project_id=` (paginiert) auf Namensgleichheit geprüft und eine existierende Section zurückgegeben statt ein Duplikat anzulegen
 - `create-task.mjs`
   - legt eine Task strukturiert per REST an (`project_id`, `section_id`, `description`, Priorität)
+- `create-tasks.mjs`
+  - legt mehrere Tasks aus einem JSON-Array an (`--file <tasks.json>` oder `--stdin`; Felder `content` Pflicht, `description`, `project_id`, `section_id`, `priority`, `deadline_date`, `due_string`); erstellt sequenziell in Eingabereihenfolge, sammelt Einzelfehler pro Index im Envelope (`created`, `failed_count`, `results`, `failed`) und fährt fort; exit 0 bei Teilerfolg, exit 1 bei Totalversagen
 - `quick-add-task.mjs`
   - erstellt eine Task über Quick Add
 - `sync-resources.mjs`

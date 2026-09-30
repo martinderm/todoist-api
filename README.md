@@ -77,6 +77,14 @@ node scripts/list-projects.mjs --limit 10
 node scripts/list-tasks.mjs --limit 10
 node scripts/quick-add-task.mjs --text "Review project plan tomorrow 10am #Inbox"
 node scripts/sync-resources.mjs --resources projects,items,sections,labels
+node scripts/create-tasks.mjs --file tasks.json
+node scripts/create-section.mjs --name "MM Support" --project-id <project-id> --find-or-create
+```
+
+Tests (netzfrei, ohne API-Token):
+
+```bash
+node --test "tests/**/*.mjs"
 ```
 
 ## Lizenz
