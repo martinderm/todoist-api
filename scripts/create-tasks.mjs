@@ -173,8 +173,4 @@ async function main() {
   }
 }
 
-const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : null;
-
-if (invokedPath === fileURLToPath(import.meta.url)) {
-  main();
-}
+main();
