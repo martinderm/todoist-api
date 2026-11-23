@@ -5,7 +5,7 @@ universe: live
 status: verified
 entity: references/tasks.md
 verified_at: 2026-11-23
-revision: 894383f659cf1687b3365a7cfc945ce6fef9ac4b
+revision: 001a6e24b026accb3f79e1f8ad2e14402eeb37f3
 ---
 
 # Todoist-Schema
