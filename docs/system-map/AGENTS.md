@@ -5,6 +5,7 @@ ICM Form 6; Karte des Repository-Istzustands. Einstieg für Änderungen, keine z
 | Frage | Karte |
 | :--- | :--- |
 | Skill-Arbeitsregeln, Dual-Evidence und Factored Attribution | [Skill-Verhalten](objects/skill-behavior.md) |
+| Mistral Cloud HTTP-Connector (Work/task-desk, OpenAPI-Import) | [Skill-Verhalten](objects/skill-behavior.md) |
 | REST-/Sync-Client, Secrets-Resolvierung und Ausgabe-Envelope | [Client](objects/client.md) |
 | Todoist-Feldkataloge und Task-/Section-Schemas | [Todoist-Schema](objects/todoist-schema.md) |
 | CLI-Skripte und ihre Argumente | [CLI](objects/cli.md) |
