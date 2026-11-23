@@ -4,8 +4,8 @@ cluster: domain
 universe: live
 status: verified
 entity: references/tasks.md
-verified_at: 2026-09-30
-revision: 974c6a71dd12d6943b46380f815cb8534f869397
+verified_at: 2026-11-23
+revision: 894383f659cf1687b3365a7cfc945ce6fef9ac4b
 ---
 
 # Todoist-Schema
@@ -16,9 +16,10 @@ Kuratierte Feldkataloge für Tasks, Projects und Sections; Quellbelege liegen in
 Der Skill hält API-Wissen als kuratierte Markdown-Referenzen (Kein Code-Generated-Client); jeder Eintrag trägt URL und Lesedatum. Code-Seams (CLI-Bodies) zitate die relevanten Felder direkt.
 
 ## Shape
-Tasks: `GET /tasks` unterstützt `project_id`, `section_id`, `label`, `filter`, `ids`, `cursor`, `limit` (Default 50, max 200); `POST /tasks` nimmt u. a. `content` (required), `description`, `project_id`, `section_id`, `priority` (1–4), `due` (`{string}` oder strukturiert), `deadline` (`{date}`); `POST /tasks/quick` nimmt `text`, `note`, `auto_reminder`, `parse_labels`. Projects: `GET /projects` mit `folder_id`/`workspace_id` (bei `folder_id` wird `workspace_id` ignoriert). Sections: `GET /sections?project_id=` (paginiert), `POST /sections` mit `name`, `project_id`, optional `order`, `description`; Section-Objekt u. a. mit `id`, `project_id`, `name`, `section_order`, `is_archived`. Idempotenz: kein `X-Request-Id` dokumentiert; Command-UUIDs in `/sync` sind die dokumentierte Retry-Ebene. Error-Envelope 4xx: `{error, error_code, error_extra, error_tag, http_code}` (z. B. 477 UNAUTHORIZED, 478 NOT_FOUND).
+Tasks: `GET /tasks` unterstützt `project_id`, `section_id`, `label`, `filter`, `ids`, `cursor`, `limit` (Default 50, max 200); `POST /tasks` nimmt u. a. `content` (required), `description`, `project_id`, `section_id`, `priority` (1–4), `due` (`{string}` oder strukturiert), `deadline` (`{date}`); `POST /tasks/quick` nimmt `text`, `note`, `auto_reminder`, `parse_labels`. Projects: `GET /projects` mit `folder_id`/`workspace_id` (bei `folder_id` wird `workspace_id` ignoriert). Sections: `GET /sections?project_id=` (paginiert), `POST /sections` mit `name`, `project_id`, optional `order`, `description`; Section-Objekt u. a. mit `id`, `project_id`, `name`, `section_order`, `is_archived`. Idempotenz: kein `X-Request-Id` dokumentiert; Command-UUIDs in `/sync` sind die dokumentierte Retry-Ebene. Error-Envelope 4xx: `{error, error_code, error_extra, error_tag, http_code}` (z. B. 477 UNAUTHORIZED, 478 NOT_FOUND). Task-Response liefert `due`/`deadline` strukturiert (Request-Felder `due_string`/`deadline_date`), Section-Response u. a. `section_order`/`order_key`. OpenAPI-Minimal-Spec für den Mistral-HTTP-Connector: `references/openapi/todoist-api-v1.openapi.json` (OpenAPI 3.1, aus der Live-Doku abgeleitet).
 
 - [references/tasks.md](../../../references/tasks.md) — `references/tasks.md:7`
+- [references/openapi/todoist-api-v1.openapi.json](../../../references/openapi/todoist-api-v1.openapi.json) — OpenAPI 3.1 Minimal-Spec (Connector-Import), Stand 2026-11-23
 - [references/projects.md](../../../references/projects.md) — `references/projects.md:7`
 - [references/sections.md](../../../references/sections.md) — `references/sections.md:7`
 - [references/limits-and-errors.md](../../../references/limits-and-errors.md) — `references/limits-and-errors.md:5`

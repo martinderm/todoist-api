@@ -22,8 +22,8 @@
           "project_id": { "type": "string" },
           "section_id": { "type": "string" },
           "priority": { "type": "integer", "minimum": 1, "maximum": 4 },
-          "due_string": { "type": "string" },
-          "deadline_date": { "type": "string", "format": "date" },
+          "due": { "type": ["object", "null"], "additionalProperties": true, "description": "strukturiertes Due-Objekt (string/date/datetime/...) oder null" },
+          "deadline": { "type": ["string", "null"], "format": "date" },
           "labels": { "type": "array", "items": { "type": "string" } },
           "is_completed": { "type": "boolean" }
         }
@@ -46,7 +46,11 @@
           "id": { "type": "string" },
           "name": { "type": "string" },
           "project_id": { "type": "string" },
-          "order": { "type": "integer" },
+          "section_order": { "type": "integer" },
+          "order_key": { "type": "string" },
+          "is_collapsed": { "type": "boolean" },
+          "is_archived": { "type": "boolean" },
+          "is_deleted": { "type": "boolean" },
           "description": { "type": "string" }
         }
       },

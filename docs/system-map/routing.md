@@ -8,6 +8,7 @@ ICM Form 6; Karte des Repository-Istzustands. Einstieg für Änderungen, keine z
 | Mistral Cloud HTTP-Connector (Work/task-desk, OpenAPI-Import) | [Skill-Verhalten](objects/skill-behavior.md) |
 | REST-/Sync-Client, Secrets-Resolvierung und Ausgabe-Envelope | [Client](objects/client.md) |
 | Todoist-Feldkataloge und Task-/Section-Schemas | [Todoist-Schema](objects/todoist-schema.md) |
+| OpenAPI-Minimal-Spec für den Mistral HTTP-Connector | [Todoist-Schema](objects/todoist-schema.md) |
 | CLI-Skripte und ihre Argumente | [CLI](objects/cli.md) |
 | Inkrementeller Sync über `/sync` | [Sync](objects/sync.md) |
 | Tatsächliche API-Flüsse | [Prozesse](processes/CONTEXT.md) |
