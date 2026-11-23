@@ -1,0 +1,258 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Todoist API v1 — kuratierte Minimal-Spezifikation (Mistral HTTP-Connector)",
+    "version": "1.0.0",
+    "description": "Abgeleitet aus der offiziellen Live-Doku https://developer.todoist.com/api/v1/ (Stand 2026-11-23) und den geprüften Referenzen unter references/. Deckt die Kern-Operationen für office-intelligence/task-desk ab (Tasks, Quick Add, Projects, Sections, Sync). Primärquelle bleibt die Live-Doku — bei Drift diese Spec gegen developer.todoist.com/api/v1/ prüfen. Legacy REST v2 (/rest/v2) und Sync v1/v9 sind abgeschaltet (HTTP 410)."
+  },
+  "servers": [{ "url": "https://api.todoist.com/api/v1" }],
+  "security": [{ "bearerAuth": [] }],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "description": "Authorization: Bearer <token> (Credential todoist-api-token im Connectors Gateway)" }
+    },
+    "schemas": {
+      "Task": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string" },
+          "content": { "type": "string" },
+          "description": { "type": "string" },
+          "project_id": { "type": "string" },
+          "section_id": { "type": "string" },
+          "priority": { "type": "integer", "minimum": 1, "maximum": 4 },
+          "due": { "type": ["object", "null"], "additionalProperties": true, "description": "strukturiertes Due-Objekt (string/date/datetime/...) oder null" },
+          "deadline": { "type": ["object", "null"], "additionalProperties": true, "description": "strukturiertes Deadline-Objekt (z. B. {date: ...}) oder null" },
+          "labels": { "type": "array", "items": { "type": "string" } },
+          "is_completed": { "type": "boolean" }
+        }
+      },
+      "Project": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "color": { "type": "string" },
+          "is_archived": { "type": "boolean" },
+          "is_deleted": { "type": "boolean" }
+        }
+      },
+      "Section": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "project_id": { "type": "string" },
+          "section_order": { "type": "integer" },
+          "order_key": { "type": "string" },
+          "is_collapsed": { "type": "boolean" },
+          "is_archived": { "type": "boolean" },
+          "is_deleted": { "type": "boolean" },
+          "description": { "type": "string" }
+        }
+      },
+      "Paginated": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "results": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+          "next_cursor": { "type": ["string", "null"] }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "error": { "type": "string" },
+          "error_code": { "type": "integer" },
+          "http_code": { "type": "integer" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/tasks": {
+      "get": {
+        "summary": "Tasks listen (paginiert)",
+        "parameters": [
+          { "name": "project_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "section_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "label", "in": "query", "schema": { "type": "string" } },
+          { "name": "filter", "in": "query", "schema": { "type": "string" } },
+          { "name": "ids", "in": "query", "schema": { "type": "string" } },
+          { "name": "cursor", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "maximum": 200, "default": 50 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Task-Liste", "content": { "application/json": { "schema": { "allOf": [{ "$ref": "#/components/schemas/Paginated" }] } } } },
+          "4XX": { "description": "Fehler", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "post": {
+        "summary": "Task strukturiert anlegen",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["content"],
+                "properties": {
+                  "content": { "type": "string" },
+                  "description": { "type": "string" },
+                  "project_id": { "type": "string" },
+                  "section_id": { "type": "string" },
+                  "priority": { "type": "integer", "minimum": 1, "maximum": 4 },
+                  "due_string": { "type": "string" },
+                  "deadline_date": { "type": "string", "format": "date" },
+                  "labels": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Angelegte Task", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Task" } } } },
+          "4XX": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/tasks/{id}": {
+      "get": {
+        "summary": "Einzelne Task laden",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "Task", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Task" } } } },
+          "404": { "description": "Nicht gefunden", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "post": {
+        "summary": "Task aktualisieren",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } }
+        },
+        "responses": {
+          "200": { "description": "Aktualisierte Task", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Task" } } } }
+        }
+      },
+      "delete": {
+        "summary": "Task löschen",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "204": { "description": "Gelöscht" } }
+      }
+    },
+    "/tasks/{id}/close": {
+      "post": {
+        "summary": "Task schließen (erledigen)",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "204": { "description": "Geschlossen" } }
+      }
+    },
+    "/tasks/quick": {
+      "post": {
+        "summary": "Quick Add (Natural Language)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": { "type": "string" },
+                  "note": { "type": "string" },
+                  "auto_reminder": { "type": "boolean" },
+                  "parse_labels": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Angelegte Task", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Task" } } } }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "summary": "Projects listen (paginiert)",
+        "parameters": [
+          { "name": "folder_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "workspace_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "cursor", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "maximum": 200, "default": 50 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Project-Liste", "content": { "application/json": { "schema": { "allOf": [{ "$ref": "#/components/schemas/Paginated" }] } } } }
+        }
+      }
+    },
+    "/sections": {
+      "get": {
+        "summary": "Sections listen (paginiert; project_id schränkt auf ein Project ein)",
+        "parameters": [
+          { "name": "project_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "workspace_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "public_key", "in": "query", "schema": { "type": "string" } },
+          { "name": "cursor", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "maximum": 200, "default": 50 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Section-Liste", "content": { "application/json": { "schema": { "allOf": [{ "$ref": "#/components/schemas/Paginated" }] } } } }
+        }
+      },
+      "post": {
+        "summary": "Section anlegen",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "project_id"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "project_id": { "type": "string" },
+                  "order": { "type": "integer" },
+                  "description": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Angelegte Section", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Section" } } } }
+        }
+      }
+    },
+    "/sync": {
+      "post": {
+        "summary": "Sync (Voll-/Delta-Abruf und Command-Batching)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["sync_token"],
+                "properties": {
+                  "sync_token": { "type": "string", "description": "Initial: '*'" },
+                  "resource_types": { "type": "string", "description": "JSON-Array als String, z. B. [\"projects\",\"items\",\"sections\",\"labels\"]" },
+                  "commands": { "type": "string", "description": "JSON-Array von Sync-Commands (type, temp_id, uuid, args)" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Sync-Response inkl. neuem sync_token", "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } }
+        }
+      }
+    }
+  }
+}

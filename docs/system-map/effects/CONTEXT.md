@@ -9,6 +9,7 @@ Inputs: Änderungsauftrag. Nicht den gesamten Baum laden; die Karten tragen die 
 | CLI-Skript hinzufügen, Argumente, Ausgabeformat | [CLI](../objects/cli.md), [Qualität](../objects/quality.md) |
 | Sync-Verhalten, Sync-Token, Ressourcen-Abruf | [Sync](../objects/sync.md), [Qualität](../objects/quality.md) |
 | Arbeitsregeln, Referenz-Kurating, Routing | [Skill-Verhalten](../objects/skill-behavior.md) |
+| Mistral-Connector-Regel oder OpenAPI-Spec ändern | [Skill-Verhalten](../objects/skill-behavior.md), [Todoist-Schema](../objects/todoist-schema.md) |
 | tests/ erweitern | [Qualität](../objects/quality.md) |
 
 Process: Hits/Does not hit der Karten gegen den konkreten Diff prüfen; Scope und passende Tests ableiten. Skripte und SKILL.md/Katalogreferenzen im selben Arbeitsschritt synchron halten.
