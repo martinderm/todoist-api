@@ -55,7 +55,7 @@
         "additionalProperties": true,
         "properties": {
           "results": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
-          "next_cursor": { "type": "string", "nullable": true }
+          "next_cursor": { "type": ["string", "null"] }
         }
       },
       "Error": {
@@ -84,7 +84,7 @@
         ],
         "responses": {
           "200": { "description": "Paginierte Task-Liste", "content": { "application/json": { "schema": { "allOf": [{ "$ref": "#/components/schemas/Paginated" }] } } } },
-          "4xx": { "description": "Fehler", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "4XX": { "description": "Fehler", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       },
       "post": {
@@ -112,7 +112,7 @@
         },
         "responses": {
           "200": { "description": "Angelegte Task", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Task" } } } },
-          "4xx": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "4XX": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
