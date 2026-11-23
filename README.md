@@ -93,10 +93,10 @@ Für Mistral Work (Web-Chats) und `office-intelligence/task-desk` läuft der Tod
 
 Connector anlegen (Studio → Connectors → Custom HTTP):
 
-- **Base-URL:** `https://api.todoist.com/rest/v2`
+- **Base-URL:** `https://api.todoist.com/api/v1`
 - **Auth:** Bearer Token — Header `Authorization: Bearer <token>`
 - **Credential:** `todoist-api-token` im Connectors Gateway; Referenz für Agents/Sandboxes: `secret:workspace:todoist-api-token`. Der Token-Wert verlässt das Gateway nie und gehört nicht in dieses Repo, in PRs oder Doku.
-- **Sync API v1** (falls separat angebunden): Base-URL `https://api.todoist.com/sync/v1`
+- **Sync-Endpoint** (falls separat angebunden): `POST https://api.todoist.com/api/v1/sync`
 
 Regel: API-Details (Endpoints, Pagination, Rate Limits, Fehler) immer live von https://developer.todoist.com holen und in `references/sources.md` protokollieren. Lokal in Vibe/Cloud-Sandboxes weiterhin mit `scripts/` und Secrets aus `secrets.json` arbeiten (siehe Voraussetzungen).
 
