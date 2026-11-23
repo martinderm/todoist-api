@@ -91,11 +91,11 @@ node --test "tests/**/*.mjs"
 
 Für Mistral Work (Web-Chats) und `office-intelligence/task-desk` läuft der Todoist-Zugriff primär über einen **custom HTTP-Connector** (Web-Chats haben keinen Code-Interpreter-Netzwerkzugriff).
 
-Connector anlegen (Studio → Connectors → Custom HTTP):
+Connector anlegen (Studio → Connectors → + Add connector → Custom connector → HTTP; Ablauf siehe [docs.mistral.ai/studio/connectors/http-connectors](https://docs.mistral.ai/studio/connectors/http-connectors)):
 
-- **Base-URL:** `https://api.todoist.com/api/v1`
-- **Auth:** Bearer Token — Header `Authorization: Bearer <token>`
-- **Credential:** `todoist-api-token` im Connectors Gateway; Referenz für Agents/Sandboxes: `secret:workspace:todoist-api-token`. Der Token-Wert verlässt das Gateway nie und gehört nicht in dieses Repo, in PRs oder Doku.
+- **Server URL (Base-URL):** `https://api.todoist.com/api/v1`
+- **Auth:** API key — Key-Name `Authorization`, Wert `Bearer <token>` (im Connectors Gateway als Credential `todoist-api-token` hinterlegt; Referenz für Agents/Sandboxes: `secret:workspace:todoist-api-token`). Der Token-Wert verlässt das Gateway nie und gehört nicht in dieses Repo, in PRs oder Doku.
+- **OpenAPI-Spec:** Datei oder öffentliche URL (OpenAPI 3.0/3.1/3.2, JSON/YAML) importieren — Studio legt daraus pro Operation ein Tool an. Spezifikation live von developer.todoist.com beziehen.
 - **Sync-Endpoint** (falls separat angebunden): `POST https://api.todoist.com/api/v1/sync`
 
 Regel: API-Details (Endpoints, Pagination, Rate Limits, Fehler) immer live von https://developer.todoist.com holen und in `references/sources.md` protokollieren. Lokal in Vibe/Cloud-Sandboxes weiterhin mit `scripts/` und Secrets aus `secrets.json` arbeiten (siehe Voraussetzungen).
