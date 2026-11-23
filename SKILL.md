@@ -10,6 +10,10 @@ description: Arbeite mit der Todoist API für Tasks, Projects, Sections, Labels,
 
 Nutze diesen Skill für direkte Todoist-API-Operationen. Bevor du konkrete API-Operationen planst oder implementierst, hole dir den aktuellen Stand aus der offiziellen Doku.
 
+## Mistral Cloud (Connector)
+
+In Mistral Work (Web-Chats) und im task-desk von office-intelligence läuft der Todoist-Zugriff primär über einen custom HTTP-Connector: Base-URL `https://api.todoist.com/rest/v2`, Bearer Token, Credential `todoist-api-token` im Connectors Gateway (Referenz für Agents/Sandboxes: `secret:workspace:todoist-api-token`). Anlage siehe README-Abschnitt „Mistral Cloud (Connector)“. Regel: API-Details immer live von https://developer.todoist.com holen — nie aus diesem Skill raten. Secret-Werte nie in Repo, PRs oder Doku eintragen.
+
 ## Offizielle Doku
 
 Primärquelle:
