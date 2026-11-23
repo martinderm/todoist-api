@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Todoist API v1 — kuratierte Spezifikation für den Mistral HTTP-Connector (täglicher Bedarf)",
-    "version": "1.1.0",
-    "description": "Abgeleitet aus der offiziellen Live-Doku https://developer.todoist.com/api/v1/ (Stand 2026-11-23), dem offiziellen Doist-SDK (Doist/todoist-api-typescript, src/consts/endpoints.ts) und den geprüften Referenzen unter references/. Deckt den täglichen Bedarf ab: Tasks (listen/suchen/anlegen/ändern/erledigen/wieder öffnen/verschieben/löschen, Quick Add, erledigte Tasks, Produktivitäts-Stats), Projects (inkl. Archiv), Sections (inkl. Archiv), Labels, Comments, Reminders, User, Activity und /sync. Primärquelle bleibt die Live-Doku — bei Drift diese Spec gegen developer.todoist.com/api/v1/ prüfen. Legacy REST v2 (/rest/v2) und Sync v1/v9 sind abgeschaltet (HTTP 410). Nicht enthalten (bewusst): Workspaces/Billing/Folders/Templates/Uploads/Webhooks/App-Console, OAuth-Flows, location_reminders."
+    "version": "1.2.0",
+    "description": "Abgeleitet aus der offiziellen Live-Doku https://developer.todoist.com/api/v1/ (Stand 2026-11-23), dem offiziellen Doist-SDK (Doist/todoist-api-typescript, src/consts/endpoints.ts) und den geprüften Referenzen unter references/. Deckt den täglichen Bedarf ab: Tasks (listen/suchen/anlegen/ändern/erledigen/wieder öffnen/verschieben/löschen, Quick Add, erledigte Tasks, Produktivitäts-Stats), Projects (inkl. Archiv), Sections (inkl. Archiv), Labels, Comments, Reminders, User, Activity und /sync. Primärquelle bleibt die Live-Doku — bei Drift diese Spec gegen developer.todoist.com/api/v1/ prüfen. Legacy REST v2 (/rest/v2) und Sync v1/v9 sind abgeschaltet (HTTP 410). Nicht enthalten (bewusst): Billing/Templates/Uploads/App-Webhooks/App-Console, OAuth-Flows, location_reminders, Workspace-Administration (invitations/users/plan). Workspaces/Folders sind nur gelistet (GET), da persönliche Accounts keine Workspaces haben."
   },
   "servers": [{ "url": "https://api.todoist.com/api/v1" }],
   "security": [{ "bearerAuth": [] }],
@@ -662,6 +662,70 @@
         ],
         "responses": {
           "200": { "description": "Paginierte Activity-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/tasks/completed/search": {
+      "get": {
+        "summary": "Erledigte Tasks per Volltext durchsuchen",
+        "parameters": [
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Trefferliste erledigter Tasks", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/filters": {
+      "get": {
+        "summary": "Gespeicherte Filter listen (für GET /tasks/filter)",
+        "parameters": [
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Filter-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/projects/{id}/collaborators": {
+      "get": {
+        "summary": "Collaborators eines geteilten Projects listen (z. B. BOKU-LLL)",
+        "parameters": [
+          { "$ref": "#/components/parameters/id" },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Collaborator-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/workspaces": {
+      "get": {
+        "summary": "Workspaces des Accounts listen (bei Personal-Accounts leer; Business-only)",
+        "parameters": [
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Liste der Workspaces (flach; bei Personal-Account [])", "content": { "application/json": { "schema": { "type": "array", "items": { "type": "object", "additionalProperties": true } } } } }
+        }
+      }
+    },
+    "/folders": {
+      "get": {
+        "summary": "Folders einer Workspace listen (workspace_id Pflicht; Personal-Account: 400)",
+        "parameters": [
+          { "name": "workspace_id", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Folder-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } },
+          "4XX": { "description": "z. B. 400 ARGUMENT_MISSING ohne workspace_id", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
