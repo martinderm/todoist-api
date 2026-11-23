@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Todoist API v1 — kuratierte Minimal-Spezifikation (Mistral HTTP-Connector)",
-    "version": "1.0.0",
-    "description": "Abgeleitet aus der offiziellen Live-Doku https://developer.todoist.com/api/v1/ (Stand 2026-11-23) und den geprüften Referenzen unter references/. Deckt die Kern-Operationen für office-intelligence/task-desk ab (Tasks, Quick Add, Projects, Sections, Sync). Primärquelle bleibt die Live-Doku — bei Drift diese Spec gegen developer.todoist.com/api/v1/ prüfen. Legacy REST v2 (/rest/v2) und Sync v1/v9 sind abgeschaltet (HTTP 410)."
+    "title": "Todoist API v1 — kuratierte Spezifikation für den Mistral HTTP-Connector (täglicher Bedarf)",
+    "version": "1.2.0",
+    "description": "Abgeleitet aus der offiziellen Live-Doku https://developer.todoist.com/api/v1/ (Stand 2026-11-23), dem offiziellen Doist-SDK (Doist/todoist-api-typescript, src/consts/endpoints.ts) und den geprüften Referenzen unter references/. Deckt den täglichen Bedarf ab: Tasks (listen/suchen/anlegen/ändern/erledigen/wieder öffnen/verschieben/löschen, Quick Add, erledigte Tasks, Produktivitäts-Stats), Projects (inkl. Archiv), Sections (inkl. Archiv), Labels, Comments, Reminders, User, Activity und /sync. Primärquelle bleibt die Live-Doku — bei Drift diese Spec gegen developer.todoist.com/api/v1/ prüfen. Legacy REST v2 (/rest/v2) und Sync v1/v9 sind abgeschaltet (HTTP 410). Nicht enthalten (bewusst): Billing/Templates/Uploads/App-Webhooks/App-Console, OAuth-Flows, location_reminders, Workspace-Administration (invitations/users/plan). Workspaces/Folders sind nur gelistet (GET), da persönliche Accounts keine Workspaces haben."
   },
   "servers": [{ "url": "https://api.todoist.com/api/v1" }],
   "security": [{ "bearerAuth": [] }],
@@ -19,13 +19,15 @@
           "id": { "type": "string" },
           "content": { "type": "string" },
           "description": { "type": "string" },
-          "project_id": { "type": "string" },
-          "section_id": { "type": "string" },
+          "project_id": { "type": ["string", "null"] },
+          "section_id": { "type": ["string", "null"] },
+          "parent_id": { "type": ["string", "null"] },
           "priority": { "type": "integer", "minimum": 1, "maximum": 4 },
-          "due": { "type": ["object", "null"], "additionalProperties": true, "description": "strukturiertes Due-Objekt (string/date/datetime/...) oder null" },
+          "due": { "type": ["object", "null"], "additionalProperties": true, "description": "strukturiertes Due-Objekt (date/string/lang/is_recurring) oder null" },
           "deadline": { "type": ["object", "null"], "additionalProperties": true, "description": "strukturiertes Deadline-Objekt (z. B. {date: ...}) oder null" },
           "labels": { "type": "array", "items": { "type": "string" } },
-          "is_completed": { "type": "boolean" }
+          "checked": { "type": "boolean" },
+          "is_deleted": { "type": "boolean" }
         }
       },
       "Project": {
@@ -35,8 +37,10 @@
           "id": { "type": "string" },
           "name": { "type": "string" },
           "color": { "type": "string" },
+          "parent_id": { "type": ["string", "null"] },
           "is_archived": { "type": "boolean" },
-          "is_deleted": { "type": "boolean" }
+          "is_deleted": { "type": "boolean" },
+          "view_style": { "type": "string" }
         }
       },
       "Section": {
@@ -54,6 +58,38 @@
           "description": { "type": "string" }
         }
       },
+      "Label": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "color": { "type": "string" },
+          "order": { "type": "integer" },
+          "is_favorite": { "type": "boolean" }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string" },
+          "item_id": { "type": "string", "description": "Task-ID" },
+          "project_id": { "type": ["string", "null"] },
+          "content": { "type": "string" },
+          "posted_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Reminder": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string" },
+          "item_id": { "type": "string" },
+          "type": { "type": "string" },
+          "due": { "type": ["object", "null"], "additionalProperties": true }
+        }
+      },
       "Paginated": {
         "type": "object",
         "additionalProperties": true,
@@ -68,9 +104,16 @@
         "properties": {
           "error": { "type": "string" },
           "error_code": { "type": "integer" },
+          "error_extra": { "type": ["object", "null"], "additionalProperties": true },
+          "error_tag": { "type": "string" },
           "http_code": { "type": "integer" }
         }
       }
+    },
+    "parameters": {
+      "cursor": { "name": "cursor", "in": "query", "schema": { "type": "string" }, "description": "Pagination-Cursor aus next_cursor der vorherigen Seite" },
+      "limit": { "name": "limit", "in": "query", "schema": { "type": "integer", "maximum": 200, "default": 50 } },
+      "id": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Server-ID (base32/numerisch; tmp-...-Platzhalter sind ungültig)" }
     }
   },
   "paths": {
@@ -83,12 +126,12 @@
           { "name": "label", "in": "query", "schema": { "type": "string" } },
           { "name": "filter", "in": "query", "schema": { "type": "string" } },
           { "name": "ids", "in": "query", "schema": { "type": "string" } },
-          { "name": "cursor", "in": "query", "schema": { "type": "string" } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "maximum": 200, "default": 50 } }
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
         ],
         "responses": {
-          "200": { "description": "Paginierte Task-Liste", "content": { "application/json": { "schema": { "allOf": [{ "$ref": "#/components/schemas/Paginated" }] } } } },
-          "4XX": { "description": "Fehler", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "200": { "description": "Paginierte Task-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } },
+          "4XX": { "description": "Fehler (z. B. 401/477 UNAUTHORIZED)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       },
       "post": {
@@ -105,8 +148,10 @@
                   "description": { "type": "string" },
                   "project_id": { "type": "string" },
                   "section_id": { "type": "string" },
+                  "parent_id": { "type": "string" },
                   "priority": { "type": "integer", "minimum": 1, "maximum": 4 },
                   "due_string": { "type": "string" },
+                  "due_date": { "type": "string", "format": "date" },
                   "deadline_date": { "type": "string", "format": "date" },
                   "labels": { "type": "array", "items": { "type": "string" } }
                 }
@@ -120,37 +165,55 @@
         }
       }
     },
-    "/tasks/{id}": {
+    "/tasks/filter": {
       "get": {
-        "summary": "Einzelne Task laden",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "summary": "Tasks per Todoist-Filter abfragen (z. B. 'today', 'p1', 'overdue')",
+        "parameters": [
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string", "maxLength": 1024 }, "description": "Todoist-Filterausdruck" },
+          { "name": "lang", "in": "query", "schema": { "type": "string" }, "description": "Sprache des Filters, z. B. 'de'" },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
         "responses": {
-          "200": { "description": "Task", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Task" } } } },
-          "404": { "description": "Nicht gefunden", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "200": { "description": "Paginierte Task-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } },
+          "4XX": { "description": "Fehler", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
-      },
-      "post": {
-        "summary": "Task aktualisieren",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } }
-        },
-        "responses": {
-          "200": { "description": "Aktualisierte Task", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Task" } } } }
-        }
-      },
-      "delete": {
-        "summary": "Task löschen",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "204": { "description": "Gelöscht" } }
       }
     },
-    "/tasks/{id}/close": {
-      "post": {
-        "summary": "Task schließen (erledigen)",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "204": { "description": "Geschlossen" } }
+    "/tasks/completed/by_completion_date": {
+      "get": {
+        "summary": "Erledigte Tasks nach Abschlussdatum (Tages-/Wochenrückblick)",
+        "parameters": [
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Liste erledigter Tasks", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/tasks/completed/by_due_date": {
+      "get": {
+        "summary": "Erledigte Tasks nach Fälligkeitsdatum",
+        "parameters": [
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Liste erledigter Tasks", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/tasks/completed/stats": {
+      "get": {
+        "summary": "Produktivitäts-Stats (Karma/Punkte der erledigten Tasks)",
+        "responses": {
+          "200": { "description": "Stats-Objekt", "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } }
+        }
       }
     },
     "/tasks/quick": {
@@ -178,18 +241,166 @@
         }
       }
     },
+    "/tasks/{id}": {
+      "get": {
+        "summary": "Einzelne Task laden",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": {
+          "200": { "description": "Task", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Task" } } } },
+          "4XX": { "description": "Nicht gefunden/Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "post": {
+        "summary": "Task aktualisieren",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true, "description": "Zu ändernde Felder, z. B. content, description, project_id, section_id, priority, due_string, labels" } } }
+        },
+        "responses": {
+          "204": { "description": "Aktualisiert (v1 liefert 204)" },
+          "4XX": { "description": "Fehler", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "delete": {
+        "summary": "Task löschen",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": { "204": { "description": "Gelöscht" } }
+      }
+    },
+    "/tasks/{id}/close": {
+      "post": {
+        "summary": "Task schließen (erledigen)",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": { "204": { "description": "Geschlossen" } }
+      }
+    },
+    "/tasks/{id}/reopen": {
+      "post": {
+        "summary": "Erledigte Task wieder öffnen",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": { "204": { "description": "Wieder geöffnet" } }
+      }
+    },
+    "/tasks/{id}/move": {
+      "post": {
+        "summary": "Task in anderes Project/Section verschieben",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "project_id": { "type": "string" },
+                  "section_id": { "type": "string" },
+                  "parent_id": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "Verschoben" } }
+      }
+    },
     "/projects": {
       "get": {
         "summary": "Projects listen (paginiert)",
         "parameters": [
           { "name": "folder_id", "in": "query", "schema": { "type": "string" } },
           { "name": "workspace_id", "in": "query", "schema": { "type": "integer" } },
-          { "name": "cursor", "in": "query", "schema": { "type": "string" } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "maximum": 200, "default": 50 } }
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
         ],
         "responses": {
-          "200": { "description": "Paginierte Project-Liste", "content": { "application/json": { "schema": { "allOf": [{ "$ref": "#/components/schemas/Paginated" }] } } } }
+          "200": { "description": "Paginierte Project-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
         }
+      },
+      "post": {
+        "summary": "Project anlegen",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "color": { "type": "string" },
+                  "parent_id": { "type": "string", "description": "Folder-ID" },
+                  "view_style": { "type": "string", "enum": ["list", "board"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Angelegtes Project", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Project" } } } }
+        }
+      }
+    },
+    "/projects/search": {
+      "get": {
+        "summary": "Projects per Name suchen",
+        "parameters": [
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Trefferliste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/projects/archived": {
+      "get": {
+        "summary": "Archivierte Projects listen",
+        "parameters": [
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/projects/{id}": {
+      "get": {
+        "summary": "Einzelnes Project laden",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": {
+          "200": { "description": "Project", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Project" } } } }
+        }
+      },
+      "post": {
+        "summary": "Project aktualisieren",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true, "properties": { "name": { "type": "string" }, "color": { "type": "string" }, "view_style": { "type": "string" } } } } }
+        },
+        "responses": { "204": { "description": "Aktualisiert" } }
+      },
+      "delete": {
+        "summary": "Project löschen",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": { "204": { "description": "Gelöscht" } }
+      }
+    },
+    "/projects/{id}/archive": {
+      "post": {
+        "summary": "Project archivieren",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": { "204": { "description": "Archiviert" } }
+      }
+    },
+    "/projects/{id}/unarchive": {
+      "post": {
+        "summary": "Project dearchivieren",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": { "204": { "description": "Dearchiviert" } }
       }
     },
     "/sections": {
@@ -199,11 +410,11 @@
           { "name": "project_id", "in": "query", "schema": { "type": "string" } },
           { "name": "workspace_id", "in": "query", "schema": { "type": "integer" } },
           { "name": "public_key", "in": "query", "schema": { "type": "string" } },
-          { "name": "cursor", "in": "query", "schema": { "type": "string" } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "maximum": 200, "default": 50 } }
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
         ],
         "responses": {
-          "200": { "description": "Paginierte Section-Liste", "content": { "application/json": { "schema": { "allOf": [{ "$ref": "#/components/schemas/Paginated" }] } } } }
+          "200": { "description": "Paginierte Section-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
         }
       },
       "post": {
@@ -227,6 +438,294 @@
         },
         "responses": {
           "200": { "description": "Angelegte Section", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Section" } } } }
+        }
+      }
+    },
+    "/sections/search": {
+      "get": {
+        "summary": "Sections per Name suchen",
+        "parameters": [
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Trefferliste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/sections/{id}": {
+      "get": {
+        "summary": "Einzelne Section laden",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": {
+          "200": { "description": "Section", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Section" } } } }
+        }
+      },
+      "post": {
+        "summary": "Section aktualisieren",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true, "properties": { "name": { "type": "string" }, "description": { "type": "string" } } } } }
+        },
+        "responses": { "204": { "description": "Aktualisiert" } }
+      },
+      "delete": {
+        "summary": "Section löschen",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": { "204": { "description": "Gelöscht" } }
+      }
+    },
+    "/sections/{id}/archive": {
+      "post": {
+        "summary": "Section archivieren",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": { "204": { "description": "Archiviert" } }
+      }
+    },
+    "/sections/{id}/unarchive": {
+      "post": {
+        "summary": "Section dearchivieren",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": { "204": { "description": "Dearchiviert" } }
+      }
+    },
+    "/labels": {
+      "get": {
+        "summary": "Labels listen (paginiert)",
+        "parameters": [
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Label-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      },
+      "post": {
+        "summary": "Label anlegen",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "color": { "type": "string" },
+                  "order": { "type": "integer" },
+                  "is_favorite": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Angelegtes Label", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Label" } } } }
+        }
+      }
+    },
+    "/labels/search": {
+      "get": {
+        "summary": "Labels per Name suchen",
+        "parameters": [
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Trefferliste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/labels/{id}": {
+      "post": {
+        "summary": "Label aktualisieren",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true, "properties": { "name": { "type": "string" }, "color": { "type": "string" }, "order": { "type": "integer" }, "is_favorite": { "type": "boolean" } } } } }
+        },
+        "responses": { "204": { "description": "Aktualisiert" } }
+      },
+      "delete": {
+        "summary": "Label löschen",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": { "204": { "description": "Gelöscht" } }
+      }
+    },
+    "/comments": {
+      "get": {
+        "summary": "Comments listen (task_id ODER project_id angeben)",
+        "parameters": [
+          { "name": "task_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "project_id", "in": "query", "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Comment-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      },
+      "post": {
+        "summary": "Comment an Task oder Project anlegen",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["content"],
+                "properties": {
+                  "content": { "type": "string" },
+                  "task_id": { "type": "string" },
+                  "project_id": { "type": "string" },
+                  "file_attachment": { "type": ["object", "null"], "additionalProperties": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Angelegter Comment", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Comment" } } } }
+        }
+      }
+    },
+    "/comments/{id}": {
+      "delete": {
+        "summary": "Comment löschen",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": { "204": { "description": "Gelöscht" } }
+      }
+    },
+    "/reminders": {
+      "get": {
+        "summary": "Reminders listen (optional gefiltert auf eine Task via item_id)",
+        "parameters": [
+          { "name": "item_id", "in": "query", "schema": { "type": "string" }, "description": "Task-ID" },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Reminder-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      },
+      "post": {
+        "summary": "Reminder anlegen (ggf. plan-gated)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["item_id"],
+                "properties": {
+                  "item_id": { "type": "string", "description": "Task-ID" },
+                  "type": { "type": "string", "enum": ["absolute", "relative", "location"] },
+                  "due_string": { "type": "string" },
+                  "due_date": { "type": "string", "format": "date" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Angelegter Reminder", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Reminder" } } } }
+        }
+      }
+    },
+    "/reminders/{id}": {
+      "delete": {
+        "summary": "Reminder löschen",
+        "parameters": [{ "$ref": "#/components/parameters/id" }],
+        "responses": { "204": { "description": "Gelöscht" } }
+      }
+    },
+    "/user": {
+      "get": {
+        "summary": "Eigenes User-Profil laden (inkl. Karma, Zeitzone, Features)",
+        "responses": {
+          "200": { "description": "User-Objekt", "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } }
+        }
+      }
+    },
+    "/activities": {
+      "get": {
+        "summary": "Activity-Log listen (was wurde wann geändert/erledigt)",
+        "parameters": [
+          { "name": "object_type", "in": "query", "schema": { "type": "string", "enum": ["items", "projects", "sections", "labels", "notes"] } },
+          { "name": "object_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "event_type", "in": "query", "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Activity-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/tasks/completed/search": {
+      "get": {
+        "summary": "Erledigte Tasks per Volltext durchsuchen",
+        "parameters": [
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Trefferliste erledigter Tasks", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/filters": {
+      "get": {
+        "summary": "Gespeicherte Filter listen (für GET /tasks/filter)",
+        "parameters": [
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Filter-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/projects/{id}/collaborators": {
+      "get": {
+        "summary": "Collaborators eines geteilten Projects listen (z. B. BOKU-LLL)",
+        "parameters": [
+          { "$ref": "#/components/parameters/id" },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Collaborator-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } }
+        }
+      }
+    },
+    "/workspaces": {
+      "get": {
+        "summary": "Workspaces des Accounts listen (bei Personal-Accounts leer; Business-only)",
+        "parameters": [
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Liste der Workspaces (flach; bei Personal-Account [])", "content": { "application/json": { "schema": { "type": "array", "items": { "type": "object", "additionalProperties": true } } } } }
+        }
+      }
+    },
+    "/folders": {
+      "get": {
+        "summary": "Folders einer Workspace listen (workspace_id Pflicht; Personal-Account: 400)",
+        "parameters": [
+          { "name": "workspace_id", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/cursor" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": { "description": "Paginierte Folder-Liste", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Paginated" } } } },
+          "4XX": { "description": "z. B. 400 ARGUMENT_MISSING ohne workspace_id", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },

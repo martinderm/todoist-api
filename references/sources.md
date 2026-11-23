@@ -16,7 +16,7 @@ Dokumentiert, woher die API-Knowledge dieses Skills stammt und welche externen Q
 
 - Base-URL `https://api.todoist.com/api/v1`, Auth als API key (`Authorization: Bearer <token>`).
 - Credential `todoist-api-token` liegt im Connectors Gateway; Referenz für Agents/Sandboxes: `secret:workspace:todoist-api-token`.
-- OpenAPI-Spec (OpenAPI 3.x, JSON/YAML — Datei oder öffentliche URL) wird im Studio importiert; daraus werden die Tools generiert (docs.mistral.ai/studio/connectors/http-connectors). Import-Datei im Repo: `references/openapi/todoist-api-v1.openapi.json` (minimal, aus der Live-Doku abgeleitet 2026-11-23). Todoist veröffentlicht keine stabile öffentliche Spec-URL; Referenz ist die Live-Doku https://developer.todoist.com/api/v1/.
+- OpenAPI-Spec (OpenAPI 3.x, JSON/YAML — Datei oder öffentliche URL) wird im Studio importiert; daraus werden die Tools generiert (docs.mistral.ai/studio/connectors/http-connectors). Import-Datei im Repo: `references/openapi/todoist-api-v1.openapi.json` (täglicher Bedarf: Tasks/Projects/Sections/Labels/Comments/Reminders/User/Activity/Sync; aus Live-Doku + Doist/todoist-api-typescript endpoints.ts abgeleitet, Stand 2026-11-23). Todoist veröffentlicht keine stabile öffentliche Spec-URL; Referenz ist die Live-Doku https://developer.todoist.com/api/v1/.
 - Secret-Werte nie in Repo, PRs, Doku oder Chat eintragen.
 - Anlage siehe README-Abschnitt „Mistral Cloud (Connector)“.
 
